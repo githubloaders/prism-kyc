@@ -1,0 +1,67 @@
+flowchart TD
+
+%% Entry Points
+A[Customer Entry\nUI / Chatbot / API / Webhook]
+
+%% Gateway
+A --> B[API Gateway]
+
+%% Onboarding
+B --> C[Onboarding Microservice]
+C --> D{Customer Exists?}
+
+D -->|Yes| E[Fetch Existing Customer Data]
+D -->|No| F[OCR + Chatbot Data Capture]
+F --> G[Create New Customer Profile]
+
+E --> H[Customer Onboarded]
+G --> H[Customer Onboarded]
+
+%% Loan Request
+H --> I{Loan Requested?}
+I -->|No| Z[End]
+I -->|Yes| J[Loan Eligibility Service]
+
+%% Eligibility
+J --> K{Age / CIBIL / Policy Valid?}
+K -->|No| L[Reject Loan\nSend Reason]
+K -->|Yes| M[Employee Verification Service]
+
+%% Employee Verification
+M --> N{Employment Valid?}
+N -->|No| O[Reject Loan\nSend Reason]
+N -->|Yes| P[Income Verification Service]
+
+%% Income Verification
+P --> Q{Repayment Capacity OK?}
+Q -->|No| R[Reject Loan\nSend Reason]
+Q -->|Yes| S[Loan Approved]
+
+%% Final
+S --> T[Disbursement]
+T --> Z[End]
+
+
+=============
+
+
+
+flowchart LR
+
+UI[UI / API / Webhook]
+UI --> K1[(Kafka: onboarding.request)]
+
+K1 --> OB[Onboarding Service]
+OB --> K2[(Kafka: customer.verification)]
+
+K2 --> CV[Customer Verification]
+CV --> K3[(Kafka: loan.eligibility)]
+
+K3 --> LE[Loan Eligibility]
+LE --> K4[(Kafka: employee.verification)]
+
+K4 --> EV[Employee Verification]
+EV --> K5[(Kafka: income.verification)]
+
+K5 --> IV[Income Verification]
+IV --> KD[(Kafka: loan.decision)]
